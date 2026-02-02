@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Dashboard - TikTok & Facebook Ads</title>
+    <meta name="description" content="แดชบอร์ดติดตามค่าใช้จ่ายโฆษณา TikTok และ Facebook แยกตามรหัสสินค้า">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">💰</span>
+                    <h1>Cost Dashboard</h1>
+                </div>
+                <div class="header-info">
+                    <div class="refresh-controls">
+                        <span id="autoRefreshStatus" class="auto-refresh-status">� รีเฟรชถัดไป: <span
+                                id="countdown">12:00</span></span>
+                        <button id="refreshBtn" class="refresh-btn" title="รีเฟรชทันที">🔄 รีเฟรช</button>
+                    </div>
+                    <span id="lastUpdated" class="last-updated">กำลังโหลด...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Platform Tabs -->
+        <nav class="platform-tabs">
+            <button class="tab-btn active" data-platform="summary">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">ผลรวมทั้งหมด</span>
+            </button>
+            <button class="tab-btn" data-platform="tiktok">
+                <span class="tab-icon">🎵</span>
+                <span class="tab-label">TikTok Ads</span>
+            </button>
+            <button class="tab-btn" data-platform="facebook">
+                <span class="tab-icon">📘</span>
+                <span class="tab-label">Facebook Ads</span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" class="dashboard-content hidden">
+                <!-- Date Filter Section -->
+                <section class="date-filter-section">
+                    <div class="date-filter-header">
+                        <h3>📆 ช่วงเวลาที่แสดง</h3>
+                        <span id="selectedDateRange" class="selected-date-range">ทั้งหมด</span>
+                    </div>
+                    <!-- Date Range Picker -->
+                    <div class="date-range-picker">
+                        <div class="filter-group">
+                            <label for="startDate">วันที่เริ่ม:</label>
+                            <input type="date" id="startDate" class="date-input">
+                        </div>
+                        <span class="date-separator">ถึง</span>
+                        <div class="filter-group">
+                            <label for="endDate">วันที่สิ้นสุด:</label>
+                            <input type="date" id="endDate" class="date-input">
+                        </div>
+                        <button id="applyDateRange" class="apply-filter-btn">🔍 กรอง</button>
+                        <button id="clearDateFilter" class="clear-filter-btn">🗑️ ล้าง</button>
+                    </div>
+                </section>
+
+                <!-- Summary Cards -->
+                <section class="summary-section">
+                    <div class="summary-cards">
+                        <div class="summary-card total-card">
+                            <div class="card-icon">📊</div>
+                            <div class="card-content">
+                                <h3>ยอดรวมทั้งหมด</h3>
+                                <p id="totalCost" class="card-value">฿0</p>
+                            </div>
+                        </div>
+                        <div class="summary-card monthly-card">
+                            <div class="card-icon">📅</div>
+                            <div class="card-content">
+                                <h3>เดือนนี้</h3>
+                                <p id="monthlyCost" class="card-value">฿0</p>
+                            </div>
+                        </div>
+                        <div class="summary-card product-card">
+                            <div class="card-icon">📦</div>
+                            <div class="card-content">
+                                <h3>จำนวนสินค้า</h3>
+                                <p id="productCount" class="card-value">0</p>
+                            </div>
+                        </div>
+                        <div class="summary-card days-card">
+                            <div class="card-icon">🗓️</div>
+                            <div class="card-content">
+                                <h3>จำนวนวัน</h3>
+                                <p id="daysCount" class="card-value">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Charts Section -->
+                <section class="charts-section">
+                    <div class="chart-container daily-chart">
+                        <div class="chart-header">
+                            <h3>📈 แนวโน้มค่าใช้จ่ายรายวัน</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="dailyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container product-chart">
+                        <div class="chart-header">
+                            <h3>📊 ค่าใช้จ่ายตามสินค้า (Top 10)</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="productChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Top Products Section -->
+                <section class="top-products-section">
+                    <div class="section-header products-header">
+                        <h3>📦 รหัสสินค้าทั้งหมด (เรียงจากมากไปน้อย)</h3>
+                        <div class="products-controls">
+                            <select id="productMonthFilter" class="month-filter">
+                                <option value="all">ทุกเดือน (สะสม)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="topProductsList" class="top-products-list">
+                        <!-- Generated by JS -->
+                    </div>
+                </section>
+
+                <!-- Data Table Section -->
+                <section class="table-section">
+                    <div class="table-header">
+                        <h3>📋 รายละเอียดค่าใช้จ่ายรายวัน</h3>
+                        <div class="table-controls">
+                            <input type="text" id="searchInput" placeholder="🔍 ค้นหารหัสสินค้า..."
+                                class="search-input">
+                            <select id="monthFilter" class="month-filter">
+                                <option value="all">ทุกเดือน</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="dataTable" class="data-table">
+                            <thead>
+                                <tr id="tableHeader">
+                                    <!-- Generated by JS -->
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Generated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-container hidden">
+                <div class="error-icon">⚠️</div>
+                <h3>ไม่สามารถโหลดข้อมูลได้</h3>
+                <p id="errorMessage">กรุณาตรวจสอบการเชื่อมต่อและลองใหม่อีกครั้ง</p>
+                <button onclick="location.reload()" class="retry-btn">ลองใหม่</button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Cost Dashboard © 2026 | Powered by Google Sheets</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
