@@ -60,23 +60,55 @@
                 <section class="date-filter-section">
                     <div class="date-filter-header">
                         <h3>📆 ช่วงเวลาที่แสดง</h3>
-                        <span id="selectedDateRange" class="selected-date-range">ทั้งหมด</span>
-                    </div>
-                    <!-- Date Range Picker -->
-                    <div class="date-range-picker">
-                        <div class="filter-group">
-                            <label for="startDate">วันที่เริ่ม:</label>
-                            <input type="date" id="startDate" class="date-input">
-                        </div>
-                        <span class="date-separator">ถึง</span>
-                        <div class="filter-group">
-                            <label for="endDate">วันที่สิ้นสุด:</label>
-                            <input type="date" id="endDate" class="date-input">
-                        </div>
-                        <button id="applyDateRange" class="apply-filter-btn">🔍 กรอง</button>
-                        <button id="clearDateFilter" class="clear-filter-btn">🗑️ ล้าง</button>
+                        <button id="datePickerToggle" class="date-picker-toggle">
+                            <span id="selectedDateRange" class="selected-date-range">ทั้งหมด</span>
+                            <span class="toggle-icon">📅</span>
+                        </button>
                     </div>
                 </section>
+
+                <!-- Date Range Picker Modal (at main level for proper overlay) -->
+                <div id="dateRangeOverlay" class="modal-overlay hidden"></div>
+                <div id="dateRangeModal" class="date-range-modal hidden">
+                    <div class="date-range-content">
+                        <!-- Quick Filters -->
+                        <div class="quick-filters-panel">
+                            <button class="quick-filter-option" data-range="lifetime">ทั้งหมด</button>
+                            <button class="quick-filter-option" data-range="today">วันนี้</button>
+                            <button class="quick-filter-option" data-range="yesterday">เมื่อวาน</button>
+                            <button class="quick-filter-option" data-range="last7days">7 วันย้อนหลัง</button>
+                            <button class="quick-filter-option" data-range="last14days">14 วันย้อนหลัง</button>
+                            <button class="quick-filter-option" data-range="last30days">30 วันย้อนหลัง</button>
+                            <button class="quick-filter-option" data-range="thisweek">สัปดาห์นี้</button>
+                            <button class="quick-filter-option" data-range="lastweek">สัปดาห์ที่แล้ว</button>
+                            <button class="quick-filter-option" data-range="thismonth">เดือนนี้</button>
+                            <button class="quick-filter-option" data-range="lastmonth">เดือนที่แล้ว</button>
+                        </div>
+
+                        <!-- Calendars -->
+                        <div class="calendars-panel">
+                            <div class="calendar-header">
+                                <button id="prevMonth" class="cal-nav-btn">«</button>
+                                <span id="calMonth1Label" class="cal-month-label"></span>
+                                <span id="calMonth2Label" class="cal-month-label"></span>
+                                <button id="nextMonth" class="cal-nav-btn">»</button>
+                            </div>
+                            <div class="calendars-container">
+                                <div id="calendar1" class="calendar"></div>
+                                <div id="calendar2" class="calendar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="date-range-footer">
+                        <span class="timezone-info">(UTC+07:00) Thailand Standard Time</span>
+                        <div class="modal-buttons">
+                            <button id="cancelDateRange" class="modal-btn cancel-btn">ยกเลิก</button>
+                            <button id="applyDateRange" class="modal-btn apply-btn">ใช้งาน</button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Summary Cards -->
                 <section class="summary-section">
