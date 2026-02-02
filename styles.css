@@ -364,6 +364,7 @@ body.facebook-theme::before {
 
 /* Date Filter Section */
 .date-filter-section {
+    position: relative;
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
@@ -376,7 +377,6 @@ body.facebook-theme::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
     flex-wrap: wrap;
     gap: var(--spacing-sm);
 }
@@ -455,15 +455,11 @@ body.facebook-theme::before {
     color: var(--error);
 }
 
-/* Date Range Picker */
-.date-range-picker {
+/* Date Picker Toggle Button */
+.date-picker-toggle {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
     align-items: center;
-}
-
-.date-input {
+    gap: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--bg-tertiary);
     border: 1px solid var(--glass-border);
@@ -474,38 +470,249 @@ body.facebook-theme::before {
     transition: all var(--transition-fast);
 }
 
-.date-input:focus {
-    outline: none;
+.date-picker-toggle:hover {
+    background: var(--bg-secondary);
     border-color: var(--current-primary);
-    box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.1);
 }
 
-.date-input::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    cursor: pointer;
+.toggle-icon {
+    font-size: 1rem;
 }
 
-.date-separator {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    padding: 0 var(--spacing-xs);
+/* Date Range Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9998;
 }
 
-.apply-filter-btn {
+.modal-overlay.hidden {
+    display: none;
+}
+
+.date-range-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 700px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.date-range-modal.hidden {
+    display: none;
+}
+
+.date-range-content {
+    display: flex;
+    max-height: 400px;
+}
+
+/* Quick Filters Panel */
+.quick-filters-panel {
+    width: 160px;
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.quick-filter-option {
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--current-gradient);
+    background: transparent;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.quick-filter-option:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.quick-filter-option.active {
+    background: var(--current-primary);
     color: white;
+}
+
+/* Calendars Panel */
+.calendars-panel {
+    flex: 1;
+    padding: var(--spacing-md);
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.cal-nav-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.cal-nav-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.cal-month-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.calendars-container {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.calendar {
+    flex: 1;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-weekday {
+    padding: var(--spacing-xs);
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.calendar-day {
+    padding: var(--spacing-xs);
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day:hover:not(.empty):not(.disabled) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+.calendar-day.disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.calendar-day.today {
+    background: var(--bg-tertiary);
+    color: var(--current-primary);
+    font-weight: 600;
+}
+
+.calendar-day.selected {
+    background: var(--current-primary);
+    color: white;
+}
+
+.calendar-day.in-range {
+    background: rgba(147, 51, 234, 0.2);
+    color: var(--text-primary);
+}
+
+.calendar-day.range-start,
+.calendar-day.range-end {
+    background: var(--current-primary);
+    color: white;
+    font-weight: 600;
+}
+
+/* Date Range Footer */
+.date-range-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--glass-border);
+}
+
+.timezone-info {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.modal-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.apply-filter-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3);
+.cancel-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+}
+
+.cancel-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.apply-btn {
+    background: var(--current-primary);
+    border: none;
+    color: white;
+}
+
+.apply-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
 }
 
 /* Summary Cards */
