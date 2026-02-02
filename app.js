@@ -79,17 +79,33 @@ const elements = {
     refreshBtn: document.getElementById('refreshBtn'),
     countdown: document.getElementById('countdown'),
     autoRefreshStatus: document.getElementById('autoRefreshStatus'),
-    startDate: document.getElementById('startDate'),
-    endDate: document.getElementById('endDate'),
-    applyDateRange: document.getElementById('applyDateRange'),
+    // Date Range Picker
+    datePickerToggle: document.getElementById('datePickerToggle'),
+    dateRangeModal: document.getElementById('dateRangeModal'),
+    dateRangeOverlay: document.getElementById('dateRangeOverlay'),
     selectedDateRange: document.getElementById('selectedDateRange'),
-    clearDateFilter: document.getElementById('clearDateFilter')
+    calendar1: document.getElementById('calendar1'),
+    calendar2: document.getElementById('calendar2'),
+    calMonth1Label: document.getElementById('calMonth1Label'),
+    calMonth2Label: document.getElementById('calMonth2Label'),
+    prevMonth: document.getElementById('prevMonth'),
+    nextMonth: document.getElementById('nextMonth'),
+    applyDateRange: document.getElementById('applyDateRange'),
+    cancelDateRange: document.getElementById('cancelDateRange')
 };
 
 // Global filter state
 let globalDateFilter = {
     startDate: null,
-    endDate: null
+    endDate: null,
+    tempStartDate: null,
+    tempEndDate: null
+};
+
+// Calendar state
+let calendarState = {
+    currentMonth: new Date().getMonth(),
+    currentYear: new Date().getFullYear()
 };
 
 // Initialize
@@ -116,9 +132,20 @@ function setupEventListeners() {
     // Refresh button
     elements.refreshBtn.addEventListener('click', manualRefresh);
 
-    // Date range filter
+    // Date Range Picker
+    elements.datePickerToggle.addEventListener('click', toggleDatePicker);
     elements.applyDateRange.addEventListener('click', applyDateRangeFilter);
-    elements.clearDateFilter.addEventListener('click', clearGlobalDateFilter);
+    elements.cancelDateRange.addEventListener('click', closeDatePicker);
+    elements.prevMonth.addEventListener('click', () => navigateMonth(-1));
+    elements.nextMonth.addEventListener('click', () => navigateMonth(1));
+
+    // Quick filter options
+    document.querySelectorAll('.quick-filter-option').forEach(btn => {
+        btn.addEventListener('click', () => handleQuickFilter(btn.dataset.range));
+    });
+
+    // Close modal when clicking overlay
+    elements.dateRangeOverlay.addEventListener('click', closeDatePicker);
 }
 
 // Data Loading
@@ -263,73 +290,244 @@ async function manualRefresh() {
 
 // Global Date Filter Functions
 
-function applyDateRangeFilter() {
-    const startDateValue = elements.startDate.value;
-    const endDateValue = elements.endDate.value;
+const monthNamesThai = {
+    0: 'มกราคม', 1: 'กุมภาพันธ์', 2: 'มีนาคม',
+    3: 'เมษายน', 4: 'พฤษภาคม', 5: 'มิถุนายน',
+    6: 'กรกฎาคม', 7: 'สิงหาคม', 8: 'กันยายน',
+    9: 'ตุลาคม', 10: 'พฤศจิกายน', 11: 'ธันวาคม'
+};
 
-    if (!startDateValue && !endDateValue) {
-        alert('กรุณาเลือกวันที่อย่างน้อย 1 วัน');
-        return;
+function toggleDatePicker() {
+    const modal = elements.dateRangeModal;
+    if (modal.classList.contains('hidden')) {
+        openDatePicker();
+    } else {
+        closeDatePicker();
+    }
+}
+
+function openDatePicker() {
+    // Initialize temp dates with current selection
+    globalDateFilter.tempStartDate = globalDateFilter.startDate;
+    globalDateFilter.tempEndDate = globalDateFilter.endDate;
+
+    elements.dateRangeOverlay.classList.remove('hidden');
+    elements.dateRangeModal.classList.remove('hidden');
+    renderCalendars();
+    updateQuickFilterHighlight();
+}
+
+function closeDatePicker() {
+    elements.dateRangeOverlay.classList.add('hidden');
+    elements.dateRangeModal.classList.add('hidden');
+    globalDateFilter.tempStartDate = null;
+    globalDateFilter.tempEndDate = null;
+}
+
+function navigateMonth(direction) {
+    calendarState.currentMonth += direction;
+    if (calendarState.currentMonth < 0) {
+        calendarState.currentMonth = 11;
+        calendarState.currentYear--;
+    } else if (calendarState.currentMonth > 11) {
+        calendarState.currentMonth = 0;
+        calendarState.currentYear++;
+    }
+    renderCalendars();
+}
+
+function renderCalendars() {
+    const month1 = calendarState.currentMonth;
+    const year1 = calendarState.currentYear;
+    const month2 = month1 === 11 ? 0 : month1 + 1;
+    const year2 = month1 === 11 ? year1 + 1 : year1;
+
+    elements.calMonth1Label.textContent = `${monthNamesThai[month1]} ${year1}`;
+    elements.calMonth2Label.textContent = `${monthNamesThai[month2]} ${year2}`;
+
+    elements.calendar1.innerHTML = renderCalendarGrid(year1, month1);
+    elements.calendar2.innerHTML = renderCalendarGrid(year2, month2);
+
+    // Add click listeners to days
+    document.querySelectorAll('.calendar-day:not(.empty):not(.disabled)').forEach(day => {
+        day.addEventListener('click', () => handleDayClick(day.dataset.date));
+    });
+}
+
+function renderCalendarGrid(year, month) {
+    const weekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let html = '<div class="calendar-grid">';
+
+    // Weekday headers
+    weekdays.forEach(day => {
+        html += `<div class="calendar-weekday">${day}</div>`;
+    });
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) {
+        html += '<div class="calendar-day empty"></div>';
     }
 
-    // If only start date, use it as both start and end
-    if (startDateValue && !endDateValue) {
-        globalDateFilter.startDate = startDateValue;
-        globalDateFilter.endDate = startDateValue;
+    // Days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const date = new Date(year, month, day);
+        date.setHours(0, 0, 0, 0);
+
+        let classes = ['calendar-day'];
+
+        // Today
+        if (date.getTime() === today.getTime()) {
+            classes.push('today');
+        }
+
+        // Selected range
+        if (globalDateFilter.tempStartDate && globalDateFilter.tempEndDate) {
+            const start = new Date(globalDateFilter.tempStartDate);
+            const end = new Date(globalDateFilter.tempEndDate);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+
+            if (date.getTime() === start.getTime()) {
+                classes.push('range-start');
+            } else if (date.getTime() === end.getTime()) {
+                classes.push('range-end');
+            } else if (date > start && date < end) {
+                classes.push('in-range');
+            }
+        } else if (globalDateFilter.tempStartDate) {
+            const start = new Date(globalDateFilter.tempStartDate);
+            start.setHours(0, 0, 0, 0);
+            if (date.getTime() === start.getTime()) {
+                classes.push('selected');
+            }
+        }
+
+        html += `<div class="${classes.join(' ')}" data-date="${dateStr}">${day}</div>`;
     }
-    // If only end date, use it as both start and end
-    else if (!startDateValue && endDateValue) {
-        globalDateFilter.startDate = endDateValue;
-        globalDateFilter.endDate = endDateValue;
-    }
-    // Both dates provided
-    else {
-        // Ensure start is before or equal to end
-        if (startDateValue > endDateValue) {
-            globalDateFilter.startDate = endDateValue;
-            globalDateFilter.endDate = startDateValue;
+
+    html += '</div>';
+    return html;
+}
+
+function handleDayClick(dateStr) {
+    if (!globalDateFilter.tempStartDate || globalDateFilter.tempEndDate) {
+        // Start new selection
+        globalDateFilter.tempStartDate = dateStr;
+        globalDateFilter.tempEndDate = null;
+    } else {
+        // Complete selection
+        if (dateStr < globalDateFilter.tempStartDate) {
+            globalDateFilter.tempEndDate = globalDateFilter.tempStartDate;
+            globalDateFilter.tempStartDate = dateStr;
         } else {
-            globalDateFilter.startDate = startDateValue;
-            globalDateFilter.endDate = endDateValue;
+            globalDateFilter.tempEndDate = dateStr;
         }
     }
-
-    updateSelectedDateRangeDisplay();
-    applyGlobalDateFilter();
+    renderCalendars();
+    updateQuickFilterHighlight();
 }
 
-function clearGlobalDateFilter() {
-    globalDateFilter.startDate = null;
-    globalDateFilter.endDate = null;
+function handleQuickFilter(range) {
+    const today = new Date();
+    let startDate, endDate;
 
-    elements.startDate.value = '';
-    elements.endDate.value = '';
+    switch (range) {
+        case 'lifetime':
+            startDate = null;
+            endDate = null;
+            break;
+        case 'today':
+            startDate = formatDateISO(today);
+            endDate = formatDateISO(today);
+            break;
+        case 'yesterday':
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            startDate = formatDateISO(yesterday);
+            endDate = formatDateISO(yesterday);
+            break;
+        case 'last7days':
+            const last7 = new Date(today);
+            last7.setDate(last7.getDate() - 6);
+            startDate = formatDateISO(last7);
+            endDate = formatDateISO(today);
+            break;
+        case 'last14days':
+            const last14 = new Date(today);
+            last14.setDate(last14.getDate() - 13);
+            startDate = formatDateISO(last14);
+            endDate = formatDateISO(today);
+            break;
+        case 'last30days':
+            const last30 = new Date(today);
+            last30.setDate(last30.getDate() - 29);
+            startDate = formatDateISO(last30);
+            endDate = formatDateISO(today);
+            break;
+        case 'thisweek':
+            const dayOfWeek = today.getDay();
+            const thisWeekStart = new Date(today);
+            thisWeekStart.setDate(today.getDate() - dayOfWeek);
+            startDate = formatDateISO(thisWeekStart);
+            endDate = formatDateISO(today);
+            break;
+        case 'lastweek':
+            const lastWeekEnd = new Date(today);
+            lastWeekEnd.setDate(today.getDate() - today.getDay() - 1);
+            const lastWeekStart = new Date(lastWeekEnd);
+            lastWeekStart.setDate(lastWeekEnd.getDate() - 6);
+            startDate = formatDateISO(lastWeekStart);
+            endDate = formatDateISO(lastWeekEnd);
+            break;
+        case 'thismonth':
+            const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            startDate = formatDateISO(thisMonthStart);
+            endDate = formatDateISO(today);
+            break;
+        case 'lastmonth':
+            const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+            const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            startDate = formatDateISO(lastMonthStart);
+            endDate = formatDateISO(lastMonthEnd);
+            break;
+    }
 
-    updateSelectedDateRangeDisplay();
+    globalDateFilter.tempStartDate = startDate;
+    globalDateFilter.tempEndDate = endDate;
+    renderCalendars();
+    updateQuickFilterHighlight();
+}
 
-    // Refresh with all data
-    const data = platformData[currentPlatform];
-    if (data) {
-        updateSummaryCards(data);
-        updateTopProducts(data, 'all');
-        updateCharts(data);
-        filterTable();
+function updateQuickFilterHighlight() {
+    document.querySelectorAll('.quick-filter-option').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    if (!globalDateFilter.tempStartDate && !globalDateFilter.tempEndDate) {
+        document.querySelector('.quick-filter-option[data-range="lifetime"]')?.classList.add('active');
     }
 }
 
-function initializeDateInputs(data) {
-    if (!data || !data.dailyData || data.dailyData.length === 0) return;
+function formatDateISO(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
-    // Get min and max dates from data
-    const dates = data.dailyData.map(d => d.date).sort();
-    const minDate = dates[0];
-    const maxDate = dates[dates.length - 1];
+function applyDateRangeFilter() {
+    globalDateFilter.startDate = globalDateFilter.tempStartDate;
+    globalDateFilter.endDate = globalDateFilter.tempEndDate;
 
-    // Set min/max attributes on date inputs
-    elements.startDate.min = minDate;
-    elements.startDate.max = maxDate;
-    elements.endDate.min = minDate;
-    elements.endDate.max = maxDate;
+    closeDatePicker();
+    updateSelectedDateRangeDisplay();
+    applyGlobalDateFilter();
 }
 
 function updateSelectedDateRangeDisplay() {
@@ -773,8 +971,6 @@ function updateDashboard() {
     const data = platformData[currentPlatform];
     if (!data) return;
 
-    // Initialize date range inputs
-    initializeDateInputs(data);
     updateSelectedDateRangeDisplay();
 
     updateSummaryCards(data);
