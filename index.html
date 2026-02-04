@@ -144,6 +144,85 @@
                     </div>
                 </section>
 
+                <!-- Budget Tracker Section -->
+                <section id="budgetSection" class="budget-section hidden">
+                    <div class="section-header">
+                        <h2>💰 Budget Tracker</h2>
+                    </div>
+
+                    <div class="budget-overview">
+                        <!-- Main Budget Card -->
+                        <div class="budget-card main-budget">
+                            <div class="budget-header">
+                                <h3>งบประมาณรวม</h3>
+                                <span id="budgetStatus" class="budget-status under">ใต้งบ</span>
+                            </div>
+                            <div class="budget-amounts">
+                                <div class="budget-spent">
+                                    <span class="label">ใช้ไปแล้ว</span>
+                                    <span id="budgetSpent" class="amount">฿0</span>
+                                </div>
+                                <div class="budget-total">
+                                    <span class="label">งบทั้งหมด</span>
+                                    <span id="budgetTotal" class="amount">฿0</span>
+                                </div>
+                            </div>
+                            <div class="budget-progress">
+                                <div id="budgetProgressBar" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="budget-percentage">
+                                <span id="budgetPercentage">0%</span> ของงบประมาณ
+                            </div>
+                        </div>
+
+                        <!-- Daily Target Card -->
+                        <div class="budget-card daily-target">
+                            <div class="budget-header">
+                                <h3>🎯 เป้าหมายรายวัน</h3>
+                            </div>
+                            <div class="daily-info">
+                                <div class="daily-item">
+                                    <span class="label">งบต่อวัน</span>
+                                    <span id="dailyBudget" class="value">฿0</span>
+                                </div>
+                                <div class="daily-item">
+                                    <span class="label">วันที่ผ่านไป</span>
+                                    <span id="daysPassed" class="value">0 วัน</span>
+                                </div>
+                                <div class="daily-item">
+                                    <span class="label">วันที่เหลือ</span>
+                                    <span id="daysRemaining" class="value">0 วัน</span>
+                                </div>
+                                <div class="daily-item highlight">
+                                    <span class="label">ควรใช้ถึงวันนี้</span>
+                                    <span id="shouldSpent" class="value">฿0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Budgets -->
+                    <div class="budget-categories">
+                        <div class="budget-categories-header">
+                            <h3>📂 งบประมาณตามหมวดหมู่</h3>
+                            <div class="budget-month-selector">
+                                <label for="budgetMonthSelect">เลือกเดือน:</label>
+                                <select id="budgetMonthSelect" class="month-select">
+                                    <option value="JAN">มกราคม 2026</option>
+                                    <option value="FEB">กุมภาพันธ์ 2026</option>
+                                    <option value="MAR">มีนาคม 2026</option>
+                                    <option value="APR">เมษายน 2026</option>
+                                    <option value="MAY">พฤษภาคม 2026</option>
+                                    <option value="JUN">มิถุนายน 2026</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="categoryBudgets" class="category-grid">
+                            <!-- Categories will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Charts Section -->
                 <section class="charts-section">
                     <div class="chart-container daily-chart">
@@ -204,6 +283,82 @@
                         </table>
                     </div>
                 </section>
+            </div>
+
+            <!-- Budget View Content (shown when Budget tabs are selected) -->
+            <div id="budgetViewContent" class="budget-view-content hidden">
+                <!-- Budget Header -->
+                <div class="budget-view-header">
+                    <h2 id="budgetViewTitle">💰 Budget TikTok</h2>
+                    <span id="budgetViewMonth" class="budget-month">กุมภาพันธ์ 2026</span>
+                </div>
+
+                <!-- Budget Overview Cards -->
+                <div class="budget-view-overview">
+                    <div class="budget-overview-card total-budget">
+                        <div class="card-icon">💵</div>
+                        <div class="card-info">
+                            <span class="label">งบทั้งหมด</span>
+                            <span id="budgetViewTotal" class="value">฿0</span>
+                        </div>
+                    </div>
+                    <div class="budget-overview-card spent">
+                        <div class="card-icon">📊</div>
+                        <div class="card-info">
+                            <span class="label">ใช้ไปแล้ว</span>
+                            <span id="budgetViewSpent" class="value">฿0</span>
+                        </div>
+                    </div>
+                    <div class="budget-overview-card remaining">
+                        <div class="card-icon">💰</div>
+                        <div class="card-info">
+                            <span class="label">เหลือ</span>
+                            <span id="budgetViewRemaining" class="value">฿0</span>
+                        </div>
+                    </div>
+                    <div class="budget-overview-card daily">
+                        <div class="card-icon">📅</div>
+                        <div class="card-info">
+                            <span class="label">งบต่อวัน</span>
+                            <span id="budgetViewDaily" class="value">฿0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Budget Progress -->
+                <div class="budget-view-main">
+                    <div class="budget-main-card">
+                        <div class="budget-main-header">
+                            <h3>สถานะงบประมาณ</h3>
+                            <span id="budgetViewStatus" class="budget-status under">ใต้งบ</span>
+                        </div>
+                        <div class="budget-main-progress">
+                            <div id="budgetViewProgressBar" class="progress-bar-large" style="width: 0%"></div>
+                        </div>
+                        <div class="budget-main-info">
+                            <div class="info-item">
+                                <span class="label">เปอร์เซ็นต์</span>
+                                <span id="budgetViewPercent" class="value">0%</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">ควรใช้ถึงวันนี้</span>
+                                <span id="budgetViewShouldSpent" class="value">฿0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">วันที่เหลือ</span>
+                                <span id="budgetViewDaysRemaining" class="value">0 วัน</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="budget-view-categories">
+                    <h3>📂 รายละเอียดงบตามหมวดหมู่</h3>
+                    <div id="budgetViewCategories" class="budget-category-list">
+                        <!-- Categories populated by JS -->
+                    </div>
+                </div>
             </div>
 
             <!-- Error State -->
